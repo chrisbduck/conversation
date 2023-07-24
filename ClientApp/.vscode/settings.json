@@ -2,6 +2,7 @@
     "files.exclude": {
         "node_modules": true,
         "src/components/*.js": true,
-        "src/App*.js": true
+        "src/App*.js": true,
+        "src/report*.js": true
     }
 }
