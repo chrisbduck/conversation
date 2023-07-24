@@ -22,7 +22,7 @@ public class ChatController : Controller
         OpenAIAPI api = new(c_openaiKey);
 
         Conversation chat = api.Chat.CreateConversation();
-        chat.AppendUserInput("Tell me a joke!  Please select a random joke that you know and respond with only the joke text.");
+        chat.AppendUserInput("Tell me a random joke!");
         return await chat.GetResponseFromChatbotAsync();
     }
 

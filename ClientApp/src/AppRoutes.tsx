@@ -1,4 +1,5 @@
 import React from "react";
+import { CharacterChat } from "./components/CharacterChat";
 import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
@@ -15,6 +16,10 @@ const AppRoutes = [
   {
     path: '/fetch-data',
     element: <FetchData />
+  },
+  {
+    path: '/character-chat',
+    element: <CharacterChat />
   }
 ];
 

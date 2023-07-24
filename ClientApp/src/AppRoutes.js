@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var react_1 = __importDefault(require("react"));
+var CharacterChat_1 = require("./components/CharacterChat");
 var Counter_1 = require("./components/Counter");
 var FetchData_1 = require("./components/FetchData");
 var Home_1 = require("./components/Home");
@@ -19,6 +20,10 @@ var AppRoutes = [
     {
         path: '/fetch-data',
         element: react_1.default.createElement(FetchData_1.FetchData, null)
+    },
+    {
+        path: '/character-chat',
+        element: react_1.default.createElement(CharacterChat_1.CharacterChat, null)
     }
 ];
 exports.default = AppRoutes;
