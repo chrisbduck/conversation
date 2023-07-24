@@ -52,9 +52,17 @@ export class FetchData extends Component {
     );
   }
 
+  async test2() {
+    const response = await fetch('chat?query=hello');
+    const data = await response.json();
+    console.log('chat data', data);
+  }
+
   async populateWeatherData() {
     const response = await fetch('weatherforecast');
     const data = await response.json();
     this.setState({ forecasts: data, loading: false });
+
+    await this.test2();
   }
 }
