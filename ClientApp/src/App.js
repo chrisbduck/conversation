@@ -14,6 +14,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -37,32 +48,39 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Counter = void 0;
 var react_1 = __importStar(require("react"));
-var Counter = exports.Counter = /** @class */ (function (_super) {
-    __extends(Counter, _super);
-    function Counter(props) {
-        var _this = _super.call(this, props) || this;
-        _this.state = { currentCount: 0 };
-        _this.state = { currentCount: 0 };
-        _this.incrementCounter = _this.incrementCounter.bind(_this);
-        return _this;
+var react_router_dom_1 = require("react-router-dom");
+var AppRoutes_1 = __importDefault(require("./AppRoutes"));
+var Layout_1 = require("./components/Layout");
+require("./custom.css");
+var App = /** @class */ (function (_super) {
+    __extends(App, _super);
+    function App() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    Counter.prototype.incrementCounter = function () {
-        this.setState({
-            currentCount: this.state.currentCount + 1
-        });
+    App.prototype.render = function () {
+        return (react_1.default.createElement(Layout_1.Layout, null,
+            react_1.default.createElement(react_router_dom_1.Routes, null, AppRoutes_1.default.map(function (route, index) {
+                var element = route.element, rest = __rest(route, ["element"]);
+                return react_1.default.createElement(react_router_dom_1.Route, __assign({ key: index }, rest, { element: element }));
+            }))));
     };
-    Counter.prototype.render = function () {
-        return (react_1.default.createElement("div", null,
-            react_1.default.createElement("h1", null, "Counter"),
-            react_1.default.createElement("p", null, "This is a simple example of a React component."),
-            react_1.default.createElement("p", { "aria-live": "polite" },
-                "Current count: ",
-                react_1.default.createElement("strong", null, this.state.currentCount)),
-            react_1.default.createElement("button", { className: "btn btn-primary", onClick: this.incrementCounter }, "Increment")));
-    };
-    Counter.displayName = Counter.name;
-    return Counter;
+    App.displayName = App.name;
+    return App;
 }(react_1.Component));
+exports.default = App;
