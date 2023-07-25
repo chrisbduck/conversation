@@ -1,10 +1,44 @@
-/* Provide sufficient contrast against white background */
-a {
-  color: #0366d6;
+body {
+	font-family: Georgia, serif;
+	font-size: 18px;
+	line-height: 1.4em;
+	background-color: #452207;
+	color: #EFE0B9;
+	/* other colors:
+		text: #EFE0B9           whiteish
+		highlight: #E4B04A      yellowish
+		highlight: #B7521E      orangeish
+		medium dark: #643B0F
+		very dark: #2A2C05
+	*/
+}
+
+h1 {
+	margin: 4px 0 15px 0px;
+}
+
+.navtext-link {
+	color: #EFE0B9;
+}
+.navtext-link:hover {
+	color: #E4B04A;
+}
+
+p {
+	max-width: 800px;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+	box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+input {
+	margin: 0 10px;
+	width: 400px;
+}
+
+img {
+	margin: 0 0 16px 0;
 }
 
 code {
@@ -16,3 +50,12 @@ code {
   background-color: #1b6ec2;
   border-color: #1861ac;
 }
+
+blockquote {
+	display: block;
+	padding: 5px 10px 5px 10px;
+	margin: 0 0 16px 0;
+	position: relative;
+	border-left: 7px solid #B7521E;
+}
+

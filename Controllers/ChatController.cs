@@ -50,8 +50,6 @@ public class ChatController : Controller
 
             The scenario is that a human warrior has walked up to you and said hello.  Please respond and carry on a conversation from there."
         );
-        chat.AppendExampleChatbotOutput("Ah, greetings and good day to ye, laddie!");
-        chat.AppendUserInput("What weapons are on sale today?");
         if (history != null)
         {
             foreach (ChatMessage message in history)

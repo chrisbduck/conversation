@@ -16,37 +16,52 @@ interface IChatState {
 
 export class CharacterChat extends Component {
   static displayName = CharacterChat.name;
-
-  state: IChatState = {
-    history: [],
-    error: '',
-    loading: true
-  };
+  state: IChatState;
   userText: string;
   inputRef: React.RefObject<HTMLInputElement>;
+  characterName: string;
 
   constructor(props) {
     super(props);
+    this.state = {
+      history: [],
+      error: '',
+      loading: true
+    };
     this.userText = '';
     this.inputRef = React.createRef();
+    this.characterName = 'Grolf';
   }
 
   componentDidMount() {
-    this.populateChatData();
+    this.populateInitialPrompt();
+  }
+
+  getTextContents() {
+    if (this.state.error)
+      return <p><b>{this.state.error}</b></p>;
+    
+    const loadingElement = this.state.loading ? <p><b><i>Waiting for {this.characterName}...</i></b></p> : <span/>;
+    const contents = <div>
+      {this.state.history.map(msg => {
+        return msg.chatType == ChatType.User
+          ? <blockquote key={msg.key}><b>You:</b> {msg.text}</blockquote>
+          : <p key={msg.key}><b>{this.characterName}:</b> {msg.text}</p>;
+      })}
+      {loadingElement}
+    </div>
+    return contents;
   }
 
   render() {
-    const contents = this.state.loading || this.state.error
-      ? <p><b>{this.state.error || "Loading..."}</b></p>
-      : this.state.history.map(msg => <p key={msg.key}>{
-          msg.chatType == ChatType.User ? <em>{msg.text}</em> : msg.text
-        }</p>);
+    const contents = this.getTextContents();
 
     return (
       <div>
         <h1>Conversation</h1>
+        <img src="grolf.jpg" width="600px" />
         {contents}
-        Say something:
+        <b>Say something:</b>
         <input name="userQuery" ref={this.inputRef}
           onChange={event => this.setUserText(event.target.value)}
           disabled={this.state.loading}
@@ -75,7 +90,7 @@ export class CharacterChat extends Component {
     this.setState({loading: true});
   }
 
-  async populateChatData() {
+  async populateInitialPrompt() {
     const response = await fetch('chat');
     const data = await response.json();
     if (!response.ok) {
@@ -94,6 +109,7 @@ export class CharacterChat extends Component {
   }
 
   async requestCharacterResponse() {
+    this.setLoading();
     const chatHistory = this.state.history.map(msg => {
       return {
         type: msg.chatType,

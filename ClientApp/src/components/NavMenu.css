@@ -2,6 +2,11 @@
   white-space: normal;
   text-align: center;
   word-break: break-all;
+  color: #EFE0B9;
+}
+
+a.navbar-brand:hover {
+  color: #E4B04A;
 }
 
 html {
