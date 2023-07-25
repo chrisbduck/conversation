@@ -5,10 +5,12 @@ using OpenAI_API.Chat;
 
 namespace webapi.Controllers;
 
-public class ChatHistory
+public enum ChatType { Character, User };
+
+public class ChatMessage
 {
-    public string[]? CharacterHistory { get; set; }
-    public string[]? UserHistory { get; set; }
+    public ChatType Type { get; set; }
+    public string? Text { get; set; }
 };
 
 [ApiController]
@@ -35,7 +37,7 @@ public class ChatController : Controller
 
     private async Task<string> GetChatResponseAsync(Stream inputStream)
     {
-        ChatHistory? history = await GetStreamAsJSON<ChatHistory>(inputStream);
+        ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
 
         OpenAIAPI api = new(c_openaiKey);
 
@@ -50,22 +52,15 @@ public class ChatController : Controller
         );
         chat.AppendExampleChatbotOutput("Ah, greetings and good day to ye, laddie!");
         chat.AppendUserInput("What weapons are on sale today?");
-        /*if (history != null)
+        if (history != null)
         {
-            int characterIndex = 0;
-            int userIndex = 0;
-            if (history.CharacterHistory == null)
-                throw new InvalidOperationException("Invalid character history");
-            if (history.UserHistory == null)
-                throw new InvalidOperationException("Invalid user history");
-            while (characterIndex < history.CharacterHistory.Length || userIndex < history.UserHistory.Length)
+            foreach (ChatMessage message in history)
             {
-                if (characterIndex < history.CharacterHistory.Length)
-                    chat.AppendExampleChatbotOutput(history.CharacterHistory[characterIndex++]);
-                if (userIndex < history.UserHistory.Length)
-                    chat.AppendUserInput(history.UserHistory[userIndex++]);
+                var appendMessage = (message.Type == ChatType.Character) ? (Action<string>)chat.AppendExampleChatbotOutput : chat.AppendUserInput;
+                if (message.Text != null)
+                    appendMessage(message.Text);
             }
-        }*/
+        }
         return await chat.GetResponseFromChatbotAsync();
     }
 
