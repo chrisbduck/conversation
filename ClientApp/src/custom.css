@@ -18,10 +18,18 @@ h1 {
 }
 
 .navtext-link {
-	color: #EFE0B9;
+	color: #E4B04A;
 }
 .navtext-link:hover {
+	color: #B7521E;
+}
+
+a {
 	color: #E4B04A;
+	text-decoration: none;
+}
+a:hover {
+	color: #B7521E;
 }
 
 p {
@@ -39,6 +47,13 @@ input {
 
 img {
 	margin: 0 0 16px 0;
+}
+
+.resized-image {
+	max-width: 400px;
+	max-height: 600px;
+	width: auto;
+	height: auto;
 }
 
 code {
@@ -59,3 +74,11 @@ blockquote {
 	border-left: 7px solid #B7521E;
 }
 
+td {
+	padding: 16px 16px 0 0;
+	text-align: center;
+}
+
+.bottom-padded {
+	padding-bottom: 32px;
+}

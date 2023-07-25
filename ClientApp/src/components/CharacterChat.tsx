@@ -1,4 +1,5 @@
-﻿import React, { Component } from 'react';
+﻿import React, { Component, ComponentProps } from 'react';
+import { ContainerProps } from 'reactstrap';
 
 enum ChatType { Character, User };
 
@@ -14,14 +15,18 @@ interface IChatState {
   loading: boolean;
 }
 
-export class CharacterChat extends Component {
+interface ICharacterChatProps extends ContainerProps {
+  name: string;
+};
+
+export class CharacterChat extends Component<ICharacterChatProps> {
   static displayName = CharacterChat.name;
   state: IChatState;
   userText: string;
   inputRef: React.RefObject<HTMLInputElement>;
   characterName: string;
 
-  constructor(props) {
+  constructor(props: ICharacterChatProps) {
     super(props);
     this.state = {
       history: [],
@@ -30,7 +35,7 @@ export class CharacterChat extends Component {
     };
     this.userText = '';
     this.inputRef = React.createRef();
-    this.characterName = 'Grolf';
+    this.characterName = props.name;
   }
 
   componentDidMount() {
@@ -57,13 +62,14 @@ export class CharacterChat extends Component {
     const contents = this.getTextContents();
 
     return (
-      <div>
+      <div className="bottom-padded">
         <h1>Conversation</h1>
-        <img src="grolf.jpg" width="600px" />
+        <img src={this.characterName.toLowerCase() + ".jpg"} className="resized-image" />
         {contents}
         <b>Say something:</b>
         <input name="userQuery" ref={this.inputRef}
           onChange={event => this.setUserText(event.target.value)}
+          onKeyDown={event => this.handleKeyDown(event)}
           disabled={this.state.loading}
         />
         <button type="button" onClick={() => this.submitUserChat()} disabled={this.state.loading}>submit</button>
@@ -73,6 +79,12 @@ export class CharacterChat extends Component {
 
   setUserText(text: string) {
     this.userText = text;
+  }
+
+  handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      this.submitUserChat();
+    }
   }
 
   setError(text: string) {
@@ -91,7 +103,7 @@ export class CharacterChat extends Component {
   }
 
   async populateInitialPrompt() {
-    const response = await fetch('chat');
+    const response = await fetch(`chat?name=${this.characterName}`);
     const data = await response.json();
     if (!response.ok) {
       this.setError(response.statusText);
@@ -117,7 +129,7 @@ export class CharacterChat extends Component {
       };
     });
     const historyText = JSON.stringify(chatHistory);
-    const response = await fetch('chat', {
+    const response = await fetch(`chat?name=${this.characterName}`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

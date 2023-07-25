@@ -18,8 +18,12 @@ const AppRoutes = [
     element: <FetchData />
   },
   {
-    path: '/character-chat',
-    element: <CharacterChat />
+    path: '/grolf-chat',
+    element: <CharacterChat name="Grolf" />
+  },
+  {
+    path: '/luthien-chat',
+    element: <CharacterChat name="Luthien" />
   }
 ];
 
