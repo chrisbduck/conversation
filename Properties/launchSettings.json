@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "CharacterConversation2": {
+    "CharacterConversation": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5065",
