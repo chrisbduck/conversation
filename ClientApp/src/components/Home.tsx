@@ -8,7 +8,7 @@ export class Home extends Component {
       <div>
         <h1>Character Conversations</h1>
         <p>This page is an experiment with the OpenAI API that lets you have open-ended conversations with
-          fantasy RPG characters.</p>
+          fantasy RPG characters.  Source code is <a href="https://github.com/chrisbduck/conversation">here</a>.</p>
         <table>
           <tbody>
             <tr>
