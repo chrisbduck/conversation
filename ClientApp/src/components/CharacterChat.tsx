@@ -1,5 +1,6 @@
-﻿import React, { Component, ComponentProps } from 'react';
+﻿import React, { Component } from 'react';
 import { ContainerProps } from 'reactstrap';
+import { CharacterImgSrc } from '../Shared';
 
 enum ChatType { Character, User };
 
@@ -64,7 +65,7 @@ export class CharacterChat extends Component<ICharacterChatProps> {
     return (
       <div className="bottom-padded">
         <h1>Conversation</h1>
-        <img src={this.characterName.toLowerCase() + ".jpg"} className="resized-image" />
+        <img src={CharacterImgSrc[this.characterName]} className="resized-image" />
         {contents}
         <b>Say something:</b>
         <input name="userQuery" ref={this.inputRef}

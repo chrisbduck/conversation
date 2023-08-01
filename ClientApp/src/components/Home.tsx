@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { GrolfImgSrc, LuthienImgSrc } from '../Shared';
 
 export class Home extends Component {
   static displayName = Home.name;
@@ -12,8 +13,8 @@ export class Home extends Component {
         <table>
           <tbody>
             <tr>
-              <td><img src="Grolf.jpg" height="300px" /></td>
-              <td><img src="Luthien.jpg" height="300px" /></td>
+              <td><img src={GrolfImgSrc} height="300px" /></td>
+              <td><img src={LuthienImgSrc} height="300px" /></td>
             </tr>
             <tr>
               <td><a href="/grolf-chat">Grolf</a> the dwarven blacksmith</td>
