@@ -25,8 +25,7 @@ public class ChatController : Controller
 sounds like it's a request to do something out of the context of the story, respond as your character within the story would, using text for
 any implied actions.  For example, if I ask you to dance, respond as if my character asked your character to dance, and respond as text.
 
-In your responses, you don't need to include any note to say that you're responding as a character; you can just respond directly.
-For example, if you're playing character Bob, you don't need to start your replies with 'Bob: ' or anything similar.
+In your responses, do not include the name of your character; only include the character's response.
 
 The characters in this story live in a village of dwarves, elves, and humans.  They are frequently attacked by marauding orcs
 and goblins from the nearby hills.
@@ -36,15 +35,8 @@ He is a master fighter with a battle axe, and are familiar with all other weapon
 
 The other is Luthien, a male elf, 78 years old (the equivalent of 22 in human years).  He is an excellent shot with any type of bow and carries
 one on him at all times.  He is searching for a jewelled necklace that was stolen from his family by a band of orcs and wants people to join him to
-get it back.  He talks with an upper-class 19th-century English accent.
+get it back.  He talks with an upper-class 19th-century English accent.";
 
-";
-
-    private static readonly IReadOnlyDictionary<string, string> c_promptBackStories = new Dictionary<string, string>
-    {
-        { "Grolf", "You are Grolf." },
-        { "Luthien", "You are Luthien." },
-    };
     private const string c_promptScenario =
         @"The scenario is that a human warrior has walked up to you and said hello.  Please respond and carry on a conversation from there.  I will play the part of the human warrior in my replies.";
 
@@ -66,8 +58,8 @@ get it back.  He talks with an upper-class 19th-century English accent.
 
     private static string GetPrompt(string? characterName)
     {
-        string backStory = c_promptBackStories.GetValueOrDefault(characterName ?? "Grolf") ?? c_promptBackStories["Grolf"];
-        return $"{c_promptBackground}\n\n{backStory}\n\n{c_promptScenario}";
+        characterName ??= "Grolf";
+        return $"{c_promptBackground}\n\nYou are {characterName}.\n\n{c_promptScenario}";
     }
 
     private static async Task<string> GetChatResponseAsync(string? name, Stream inputStream)
@@ -78,26 +70,31 @@ get it back.  He talks with an upper-class 19th-century English accent.
         ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
 
         OpenAIAPI api = new(c_openaiKey);
-
         Conversation chat = api.Chat.CreateConversation();
-        chat.AppendUserInput(GetPrompt(name));
-        if (history != null)
+        AddChatHistory(name, history, chat);
+        return await chat.GetResponseFromChatbotAsync();
+    }
+
+    private static void AddChatHistory(string? characterName, ChatMessage[]? history, Conversation chat)
+    {
+        chat.AppendUserInput(GetPrompt(characterName));
+        if (history == null)
+            return;
+        
+        foreach (ChatMessage message in history)
         {
-            foreach (ChatMessage message in history)
+            if (message.Text != null)
             {
                 var appendMessage = (message.Type == ChatType.Character) ? (Action<string>)chat.AppendExampleChatbotOutput : chat.AppendUserInput;
-                if (message.Text != null)
-                    appendMessage(message.Text);
+                appendMessage(message.Text);
             }
         }
-        return await chat.GetResponseFromChatbotAsync();
     }
 
     [HttpGet()]
     public JsonResult Get(string? name = null)
     {
         string output = Task.Run(() => GetChatResponseAsync(name, HttpContext.Request.Body)).Result;
-        Console.WriteLine(output);
         return new JsonResult(output);
     }
 
@@ -105,7 +102,6 @@ get it back.  He talks with an upper-class 19th-century English accent.
     public JsonResult Post(string? name = null)
     {
         string output = Task.Run(() => GetChatResponseAsync(name, HttpContext.Request.Body)).Result;
-        Console.WriteLine(output);
         return new JsonResult(output);
     }
 }
