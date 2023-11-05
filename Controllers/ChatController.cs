@@ -40,6 +40,8 @@ get it back.  He talks with an upper-class 19th-century English accent.";
     private const string c_promptScenario =
         @"The scenario is that a human warrior has walked up to you and said hello.  Please respond and carry on a conversation from there.  I will play the part of the human warrior in my replies.";
 
+    private const string c_defaultCharacterName = "Grolf";
+
     private readonly ILogger<ChatController> _logger;
 
     public ChatController(ILogger<ChatController> logger)
@@ -58,8 +60,14 @@ get it back.  He talks with an upper-class 19th-century English accent.";
 
     private static string GetPrompt(string? characterName)
     {
-        characterName ??= "Grolf";
+        characterName ??= c_defaultCharacterName;
         return $"{c_promptBackground}\n\nYou are {characterName}.\n\n{c_promptScenario}";
+    }
+
+    private static string PostProcessResponse(string text, string? name)
+    {
+        string prefix = $"{name}: ";
+        return text.StartsWith(prefix) ? text[prefix.Length..] : text;
     }
 
     private static async Task<string> GetChatResponseAsync(string? name, Stream inputStream)
@@ -72,7 +80,8 @@ get it back.  He talks with an upper-class 19th-century English accent.";
         OpenAIAPI api = new(c_openaiKey);
         Conversation chat = api.Chat.CreateConversation();
         AddChatHistory(name, history, chat);
-        return await chat.GetResponseFromChatbotAsync();
+        string response = await chat.GetResponseFromChatbotAsync();
+        return PostProcessResponse(response, name);
     }
 
     private static void AddChatHistory(string? characterName, ChatMessage[]? history, Conversation chat)

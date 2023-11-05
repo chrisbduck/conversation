@@ -43,17 +43,30 @@ export class CharacterChat extends Component<ICharacterChatProps> {
     this.populateInitialPrompt();
   }
 
+  getMessageElements(msg: IMessage): JSX.Element {
+    const text = msg.text.trim()
+    if (msg.chatType == ChatType.User)
+      return <blockquote key={msg.key}><b>You:</b> {text}</blockquote>;
+
+    const split = text.split('\n');
+    const firstParagraph = <p key={msg.key}><b>{this.characterName}:</b> {split[0]}</p>;
+    if (split.length < 2)
+      return firstParagraph;
+
+    split.shift();
+    return <div>
+      {firstParagraph}
+      {split.map(text => <p>{text}</p>)}
+    </div>
+  }
+
   getTextContents() {
     if (this.state.error)
       return <p><b>{this.state.error}</b></p>;
     
-    const loadingElement = this.state.loading ? <p><b><i>Waiting for {this.characterName}...</i></b></p> : <span/>;
+    const loadingElement = this.state.loading ? <p><b><i>Waiting for {this.characterName}...</i></b></p> : <span />;
     const contents = <div>
-      {this.state.history.map(msg => {
-        return msg.chatType == ChatType.User
-          ? <blockquote key={msg.key}><b>You:</b> {msg.text}</blockquote>
-          : <p key={msg.key}><b>{this.characterName}:</b> {msg.text}</p>;
-      })}
+      {this.state.history.map(msg => this.getMessageElements(msg))}
       {loadingElement}
     </div>
     return contents;
@@ -105,11 +118,11 @@ export class CharacterChat extends Component<ICharacterChatProps> {
 
   async populateInitialPrompt() {
     const response = await fetch(`chat?name=${this.characterName}`);
-    const data = await response.json();
     if (!response.ok) {
       this.setError(response.statusText);
       return;
     }
+    const data = await response.json();
     this.addChatMessage(ChatType.Character, data);
   }
 
