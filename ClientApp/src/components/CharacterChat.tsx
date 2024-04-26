@@ -45,7 +45,7 @@ export class CharacterChat extends Component<ICharacterChatProps> {
 
   getMessageElements(msg: IMessage): JSX.Element {
     const text = msg.text.trim()
-    if (msg.chatType == ChatType.User)
+    if (msg.chatType === ChatType.User)
       return <blockquote key={msg.key}><b>You:</b> {text}</blockquote>;
 
     const split = text.split('\n');
