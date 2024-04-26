@@ -94,7 +94,8 @@ get it back.  He talks with an upper-class 19th-century English accent.";
         {
             if (message.Text != null)
             {
-                var appendMessage = (message.Type == ChatType.Character) ? (Action<string>)chat.AppendExampleChatbotOutput : chat.AppendUserInput;
+                var appendMessage = (message.Type == ChatType.Character) ? (Action<string>)chat.AppendExampleChatbotOutput
+                    : (text) => { chat.AppendUserInput(text); };
                 appendMessage(message.Text);
             }
         }
