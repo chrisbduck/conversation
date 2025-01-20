@@ -72,9 +72,6 @@ get it back.  He talks with an upper-class 19th-century English accent.";
 
     private static async Task<string> GetChatResponseAsync(string? name, Stream inputStream)
     {
-        if (c_openaiKey == null)
-            return $"OpenAI API key not set.  Please set the environment variable {c_openaiEnvVarName}";
-
         ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
 
         OpenAIAPI api = new(c_openaiKey);
@@ -82,6 +79,22 @@ get it back.  He talks with an upper-class 19th-century English accent.";
         AddChatHistory(name, history, chat);
         string response = await chat.GetResponseFromChatbotAsync();
         return PostProcessResponse(response, name);
+    }
+
+    private async Task<string> GetChatResponseSafeAsync(string? name, Stream inputStream)
+    {
+        if (c_openaiKey == null)
+            return $"OpenAI API key not set.  Please set the environment variable {c_openaiEnvVarName}";
+
+        try
+        {
+            return await GetChatResponseAsync(name, inputStream);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error retrieving chatbot response");
+            return "<stares blankly off into the distance> (server error!)";
+        }
     }
 
     private static void AddChatHistory(string? characterName, ChatMessage[]? history, Conversation chat)
@@ -104,14 +117,14 @@ get it back.  He talks with an upper-class 19th-century English accent.";
     [HttpGet()]
     public JsonResult Get(string? name = null)
     {
-        string output = Task.Run(() => GetChatResponseAsync(name, HttpContext.Request.Body)).Result;
+        string output = Task.Run(() => GetChatResponseSafeAsync(name, HttpContext.Request.Body)).Result;
         return new JsonResult(output);
     }
 
     [HttpPost()]
     public JsonResult Post(string? name = null)
     {
-        string output = Task.Run(() => GetChatResponseAsync(name, HttpContext.Request.Body)).Result;
+        string output = Task.Run(() => GetChatResponseSafeAsync(name, HttpContext.Request.Body)).Result;
         return new JsonResult(output);
     }
 }
