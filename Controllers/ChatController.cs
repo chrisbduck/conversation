@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CharacterConversation;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OpenAI_API;
 using OpenAI_API.Chat;
@@ -15,7 +16,7 @@ public class ChatMessage
 
 [ApiController]
 [Route("[controller]")]
-public class ChatController : Controller
+public class ChatController(ILogger<ChatController> logger) : Controller
 {
     private const string c_openaiEnvVarName = "OPENAI_API_KEY";
     private static readonly string? c_openaiKey = Environment.GetEnvironmentVariable(c_openaiEnvVarName);
@@ -42,12 +43,8 @@ get it back.  He talks with an upper-class 19th-century English accent.";
 
     private const string c_defaultCharacterName = "Grolf";
 
-    private readonly ILogger<ChatController> _logger;
-
-    public ChatController(ILogger<ChatController> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<ChatController> _logger = logger;
+    private readonly GeminiInterface _gemini = new();
 
     private static async Task<T?> GetStreamAsJSON<T>(Stream inputStream)
     {
@@ -70,15 +67,22 @@ get it back.  He talks with an upper-class 19th-century English accent.";
         return text.StartsWith(prefix) ? text[prefix.Length..] : text;
     }
 
-    private static async Task<string> GetChatResponseAsync(string? name, Stream inputStream)
+    private async Task<string> GetChatResponseAsync(string? name, Stream inputStream)
     {
-        ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
+        //ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
 
+        string prompt = GetPrompt(name);
+
+        string result = await _gemini.GenerateTextAsync(prompt);
+        return result;
+
+        /*
         OpenAIAPI api = new(c_openaiKey);
         Conversation chat = api.Chat.CreateConversation();
         AddChatHistory(name, history, chat);
         string response = await chat.GetResponseFromChatbotAsync();
         return PostProcessResponse(response, name);
+        */
     }
 
     private async Task<string> GetChatResponseSafeAsync(string? name, Stream inputStream)
@@ -118,6 +122,7 @@ get it back.  He talks with an upper-class 19th-century English accent.";
     public JsonResult Get(string? name = null)
     {
         string output = Task.Run(() => GetChatResponseSafeAsync(name, HttpContext.Request.Body)).Result;
+        Console.WriteLine($"GET: {output}");
         return new JsonResult(output);
     }
 
@@ -125,6 +130,7 @@ get it back.  He talks with an upper-class 19th-century English accent.";
     public JsonResult Post(string? name = null)
     {
         string output = Task.Run(() => GetChatResponseSafeAsync(name, HttpContext.Request.Body)).Result;
+        Console.WriteLine($"POST: {output}");
         return new JsonResult(output);
     }
 }
