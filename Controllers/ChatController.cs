@@ -1,18 +1,8 @@
-﻿using CharacterConversation;
+﻿using Gemini;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using OpenAI_API;
-using OpenAI_API.Chat;
 
 namespace webapi.Controllers;
-
-public enum ChatType { Character, User };
-
-public class ChatMessage
-{
-    public ChatType Type { get; set; }
-    public string? Text { get; set; }
-};
 
 [ApiController]
 [Route("[controller]")]
@@ -69,20 +59,10 @@ get it back.  He talks with an upper-class 19th-century English accent.";
 
     private async Task<string> GetChatResponseAsync(string? name, Stream inputStream)
     {
-        //ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
-
+        ChatMessage[]? history = await GetStreamAsJSON<ChatMessage[]>(inputStream);
         string prompt = GetPrompt(name);
-
-        string result = await _gemini.GenerateTextAsync(prompt);
+        string result = await _gemini.GenerateChatAsync(prompt, history);
         return result;
-
-        /*
-        OpenAIAPI api = new(c_openaiKey);
-        Conversation chat = api.Chat.CreateConversation();
-        AddChatHistory(name, history, chat);
-        string response = await chat.GetResponseFromChatbotAsync();
-        return PostProcessResponse(response, name);
-        */
     }
 
     private async Task<string> GetChatResponseSafeAsync(string? name, Stream inputStream)
@@ -98,23 +78,6 @@ get it back.  He talks with an upper-class 19th-century English accent.";
         {
             _logger.LogError(exception, "Error retrieving chatbot response");
             return "<stares blankly off into the distance> (server error!)";
-        }
-    }
-
-    private static void AddChatHistory(string? characterName, ChatMessage[]? history, Conversation chat)
-    {
-        chat.AppendUserInput(GetPrompt(characterName));
-        if (history == null)
-            return;
-        
-        foreach (ChatMessage message in history)
-        {
-            if (message.Text != null)
-            {
-                var appendMessage = (message.Type == ChatType.Character) ? (Action<string>)chat.AppendExampleChatbotOutput
-                    : (text) => { chat.AppendUserInput(text); };
-                appendMessage(message.Text);
-            }
         }
     }
 
