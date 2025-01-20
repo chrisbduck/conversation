@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from 'react';
 import { CharacterChat } from "./components/CharacterChat";
 import { Home } from "./components/Home";
 

@@ -1,4 +1,4 @@
-﻿import React, { Component } from 'react';
+﻿import * as React from 'react';
 import { ContainerProps } from 'reactstrap';
 import { CharacterImgSrc } from '../Shared';
 
@@ -10,152 +10,101 @@ interface IMessage {
   key: string;
 };
 
-interface IChatState {
-  history: IMessage[];
-  error: string;
-  loading: boolean;
+async function fetchCharacterResponse(name: string, history: IMessage[]): Promise<Response> {
+  const chatHistory = history.map(msg => ({ type: msg.chatType, text: msg.text }));
+  const historyText = JSON.stringify(chatHistory);
+  return await fetch(`chat?name=${name}`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: historyText
+  });
 }
 
-interface ICharacterChatProps extends ContainerProps {
-  name: string;
-};
+function ChatMessage({ msg, name }: { msg: IMessage, name: string }) {
+  const text = msg.text.trim();
+  const key = msg.key;
+  if (msg.chatType === ChatType.User)
+    return <blockquote key={key}><b>You:</b> {text}</blockquote>;
 
-export class CharacterChat extends Component<ICharacterChatProps> {
-  static displayName = CharacterChat.name;
-  state: IChatState;
-  userText: string;
-  inputRef: React.RefObject<HTMLInputElement>;
-  characterName: string;
+  const split = text.split('\n');
+  const firstParagraph = <p key={key}><b>{name}:</b> {split[0]}</p>;
+  if (split.length < 2)
+    return firstParagraph;
 
-  constructor(props: ICharacterChatProps) {
-    super(props);
-    this.state = {
-      history: [],
-      error: '',
-      loading: true
-    };
-    this.userText = '';
-    this.inputRef = React.createRef();
-    this.characterName = props.name;
+  split.shift();
+  return <div>
+    {firstParagraph}
+    {split.map(text => <p>{text}</p>)}
+  </div>
+}
+
+function CharacterCharContents({ name, isLoading, errorMsg, history }:
+    { name: string, isLoading: boolean, errorMsg: string, history: IMessage[] }) {
+  if (errorMsg)
+    return <p><b>{errorMsg}</b></p>;
+
+  const contents = <div>
+    {history.map(msg => <ChatMessage msg={msg} name={name} />)}
+    {isLoading ? <p><b><i>Waiting for {name}...</i></b></p> : null}
+  </div>
+  return contents;
+}
+
+export function CharacterChat({ name }: { name: string }) {
+  const [isLoading, setLoading] = React.useState(true);
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const [userText, setUserText] = React.useState('');
+  const [history, setHistory] = React.useState([]);
+
+  function addChatMessage(type: ChatType, text: string) {
+    setHistory([...history, { chatType: type, text: text, key: history.length.toString() }]);
+    setLoading(false);
   }
 
-  componentDidMount() {
-    this.populateInitialPrompt();
+  function submitUserChat() {
+    addChatMessage(ChatType.User, userText.trim());
+    setUserText('');
+    requestCharacterResponse();
   }
-
-  getMessageElements(msg: IMessage): JSX.Element {
-    const text = msg.text.trim()
-    if (msg.chatType === ChatType.User)
-      return <blockquote key={msg.key}><b>You:</b> {text}</blockquote>;
-
-    const split = text.split('\n');
-    const firstParagraph = <p key={msg.key}><b>{this.characterName}:</b> {split[0]}</p>;
-    if (split.length < 2)
-      return firstParagraph;
-
-    split.shift();
-    return <div>
-      {firstParagraph}
-      {split.map(text => <p>{text}</p>)}
-    </div>
-  }
-
-  getTextContents() {
-    if (this.state.error)
-      return <p><b>{this.state.error}</b></p>;
-    
-    const loadingElement = this.state.loading ? <p><b><i>Waiting for {this.characterName}...</i></b></p> : <span />;
-    const contents = <div>
-      {this.state.history.map(msg => this.getMessageElements(msg))}
-      {loadingElement}
-    </div>
-    return contents;
-  }
-
-  render() {
-    const contents = this.getTextContents();
-
-    return (
-      <div className="bottom-padded">
-        <h1>Conversation</h1>
-        <img src={CharacterImgSrc[this.characterName]} className="resized-image" />
-        {contents}
-        <b>Say something:</b>
-        <input name="userQuery" ref={this.inputRef}
-          onChange={event => this.setUserText(event.target.value)}
-          onKeyDown={event => this.handleKeyDown(event)}
-          disabled={this.state.loading}
-        />
-        <button type="button" onClick={() => this.submitUserChat()} disabled={this.state.loading}>submit</button>
-      </div>
-    );
-  }
-
-  setUserText(text: string) {
-    this.userText = text;
-  }
-
-  handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'Enter') {
-      this.submitUserChat();
-    }
-  }
-
-  setError(text: string) {
-    this.setState({error: text, loading: false});
-  }
-
-  addChatMessage(type: ChatType, text: string) {
-    let state = this.state;
-    state.history.push({chatType: type, text: text, key: state.history.length.toString()});
-    state.loading = false;
-    this.setState(state);
-  }
-
-  setLoading() {
-    this.setState({loading: true});
-  }
-
-  async populateInitialPrompt() {
-    const response = await fetch(`chat?name=${this.characterName}`);
+  
+  async function requestCharacterResponse() {
+    setLoading(true);
+    const response = await fetchCharacterResponse(name, history);
     if (!response.ok) {
-      this.setError(response.statusText);
+      setErrorMsg(response.statusText);
       return;
     }
     const data = await response.json();
-    this.addChatMessage(ChatType.Character, data);
+    addChatMessage(ChatType.Character, data);
   }
 
-  submitUserChat() {
-    const userText = this.userText.trim();
-    const element = this.inputRef.current;
-    element.value = '';
-    this.addChatMessage(ChatType.User, userText);
-    this.requestCharacterResponse();
-  }
+  // Request initial character prompt
+  React.useEffect(() => {
+    (async function () {
+      const response = await fetch(`chat?name=${this.characterName}`);
+      if (!response.ok) {
+        this.setError(response.statusText);
+        return;
+      }
+      const data = await response.json();
+      addChatMessage(ChatType.Character, data);
+    })();
+  }, []);
 
-  async requestCharacterResponse() {
-    this.setLoading();
-    const chatHistory = this.state.history.map(msg => {
-      return {
-        type: msg.chatType,
-        text: msg.text
-      };
-    });
-    const historyText = JSON.stringify(chatHistory);
-    const response = await fetch(`chat?name=${this.characterName}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: historyText
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      this.setError(response.statusText);
-      return;
-    }
-    this.addChatMessage(ChatType.Character, data);
-  }
+  return (
+    <div className="bottom-padded">
+      <h1>Conversation</h1>
+      <img src={CharacterImgSrc[name]} className="resized-image" />
+      <CharacterCharContents name={name} isLoading={isLoading} errorMsg={errorMsg} history={history} />
+      <b>Say something:</b>
+      <input name="userQuery" disabled={isLoading}
+        onChange={event => setUserText(event.target.value)}
+        onKeyDown={event => { if (event.key === 'Enter') submitUserChat(); }}
+      />
+      <button type="button" onClick={submitUserChat} disabled={isLoading}>submit</button>
+    </div>
+  );
 }
