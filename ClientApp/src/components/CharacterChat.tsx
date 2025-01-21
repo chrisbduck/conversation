@@ -1,5 +1,4 @@
 ﻿import * as React from 'react';
-import { ContainerProps } from 'reactstrap';
 import { CharacterImgSrc } from '../Shared';
 
 enum ChatType { Character, User };
@@ -10,17 +9,33 @@ interface IMessage {
   key: string;
 };
 
-async function fetchCharacterResponse(name: string, history: IMessage[]): Promise<Response> {
+interface ICharacterResponse {
+  type: 'error' | 'text',
+  text: string,
+};
+
+async function fetchCharacterResponse(name: string, history: IMessage[]): Promise<ICharacterResponse> {
   const chatHistory = history.map(msg => ({ type: msg.chatType, text: msg.text }));
   const historyText = JSON.stringify(chatHistory);
-  return await fetch(`chat?name=${name}`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: historyText
-  });
+
+  let response: Response | undefined;
+  try {
+    response = await fetch(`chat?name=${name}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: historyText
+    });
+  } catch (exception) {
+    return { type: 'error', text: exception };
+  }
+
+  if (!response.ok)
+    return { type: 'error', text: response.statusText };
+
+  return { type: 'text', text: await response.json() };
 }
 
 function ChatMessage({ msg, name }: { msg: IMessage, name: string }) {
@@ -57,42 +72,38 @@ export function CharacterChat({ name }: { name: string }) {
   const [isLoading, setLoading] = React.useState(true);
   const [errorMsg, setErrorMsg] = React.useState('');
   const [userText, setUserText] = React.useState('');
-  const [history, setHistory] = React.useState([]);
+  const [history, setHistory] = React.useState<IMessage[]>([]);
 
-  function addChatMessage(type: ChatType, text: string) {
-    setHistory([...history, { chatType: type, text: text, key: history.length.toString() }]);
+  const addChatMessage = React.useCallback((type: ChatType, text: string) => {
+    setHistory(history => [...history, { chatType: type, text: text, key: history.length.toString() }]);
     setLoading(false);
-  }
+  }, [setHistory, setLoading]);
 
-  function submitUserChat() {
-    addChatMessage(ChatType.User, userText.trim());
-    setUserText('');
-    requestCharacterResponse();
-  }
-  
-  async function requestCharacterResponse() {
-    setLoading(true);
-    const response = await fetchCharacterResponse(name, history);
-    if (!response.ok) {
-      setErrorMsg(response.statusText);
+  function submitUserChat(text: string) {
+    if (!text)
       return;
-    }
-    const data = await response.json();
-    addChatMessage(ChatType.Character, data);
+    addChatMessage(ChatType.User, userText.trim()); // the history change will submit the chat
+    setUserText('');
   }
 
-  // Request initial character prompt
+  // When the history changes and the last message was from the user, or on the first call,
+  // request the next response
   React.useEffect(() => {
+    // Ignore responses from the server
+    if (history.length > 0 && history[history.length - 1].chatType !== ChatType.User)
+      return;
+
+    // Request the next response
+    setLoading(true);
     (async function () {
-      const response = await fetch(`chat?name=${this.characterName}`);
-      if (!response.ok) {
-        this.setError(response.statusText);
+      const charResponse = await fetchCharacterResponse(name, history);
+      if (charResponse.type === 'error') {
+        setErrorMsg(charResponse.text);
         return;
       }
-      const data = await response.json();
-      addChatMessage(ChatType.Character, data);
+      addChatMessage(ChatType.Character, charResponse.text);
     })();
-  }, []);
+  }, [addChatMessage, history, name, setErrorMsg, setLoading]);
 
   return (
     <div className="bottom-padded">
@@ -100,11 +111,11 @@ export function CharacterChat({ name }: { name: string }) {
       <img src={CharacterImgSrc[name]} className="resized-image" />
       <CharacterCharContents name={name} isLoading={isLoading} errorMsg={errorMsg} history={history} />
       <b>Say something:</b>
-      <input name="userQuery" disabled={isLoading}
+      <input name="userQuery" disabled={isLoading} value={userText}
         onChange={event => setUserText(event.target.value)}
-        onKeyDown={event => { if (event.key === 'Enter') submitUserChat(); }}
+        onKeyDown={event => { if (event.key === 'Enter') submitUserChat(userText); }}
       />
-      <button type="button" onClick={submitUserChat} disabled={isLoading}>submit</button>
+      <button type="button" onClick={() => submitUserChat(userText)} disabled={isLoading}>submit</button>
     </div>
   );
 }
